@@ -1,5 +1,6 @@
 import React from 'react';
-
+import  { useState, useEffect } from 'react';
+import axios from 'axios'
 import './app.scss';
 
 // Let's talk about using index.js and some other name in the component folder
@@ -8,41 +9,71 @@ import Header from './components/header';
 import Footer from './components/footer';
 import Form from './components/form';
 import Results from './components/results';
+//https://pokeapi.co/api/v2/pokemon
+function App() {
 
-class App extends React.Component {
+  // const [post, setPost] = useState(null);
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: null,
-      requestParams: {},
-    };
+  
+
+  // Hooks : functional compoenents
+  const [stateData, setData] = useState({data: null});
+  const [stateReq, setRequestParams] = useState({requestParams: {} });  
+  const [body, setBody] = useState("");
+
+
+  useEffect(() => {
+    try {
+      async function getData() {
+        if (stateReq.url) {
+          const response = await axios({
+            method: stateReq.method,
+            url: stateReq.url,
+            data: body,
+          });
+          setData(response);
+          
+        }
+      }
+      getData();
+    } catch (error) {
+      console.log(error.message);
+    }
+  }, [stateReq, body]);
+
+  
+
+  async function callApi(requestParams) {
+
+    if (requestParams.url !== "") {
+      setRequestParams(requestParams);
+      setBody(requestParams.request);
+    } else {
+      const response = {
+        count: 2,
+        results: [
+          { name: "fake thing 1", url: "http://fakethings.com/1" },
+          { name: "fake thing 2", url: "http://fakethings.com/2" },
+        ],
+      };
+      setData({ response });
+      setRequestParams(requestParams);
+    }
   }
 
-  callApi = (requestParams) => {
-    // mock output
-    const data = {
-      count: 2,
-      results: [
-        {name: 'fake thing 1', url: 'http://fakethings.com/1'},
-        {name: 'fake thing 2', url: 'http://fakethings.com/2'},
-      ],
-    };
-    this.setState({data, requestParams});
-  }
+ 
+  return (
+     
 
-  render() {
-    return (
       <React.Fragment>
-        <Header />
-        <div>Request Method: {this.state.requestParams.method}</div>
-        <div>URL: {this.state.requestParams.url}</div>
-        <Form handleApiCall={this.callApi} />
-        <Results data={this.state.data} />
-        <Footer />
-      </React.Fragment>
-    );
-  }
+      <Header />
+      <div>Request Method: {stateReq.method}</div>
+      <div>URL: {stateReq.url}</div>
+      <Form handleApiCall={callApi} />
+      <Results data={stateData.data} />
+      <Footer />
+    </React.Fragment>
+  )
 }
 
 export default App;
